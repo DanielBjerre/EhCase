@@ -1,17 +1,42 @@
+using EhCase.Api;
+using EhCase.Api.Context;
+using EhCase.Api.ProductClientService;
+using EhCase.Api.Services;
+using EhCase.Api.Services.Baskets;
+using EhCase.Api.Services.Products;
+using EhCase.Api.Services.Products.Store;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddHostedService<RefreshProductWorker>();
+
+builder.Services.AddDbContext<BasketContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddSingleton<IProductStore, ProductStore>();
+builder.Services.AddSingleton<IProductService, ProductService>();
+builder.Services.AddScoped<IBasketService, EfBasketService>();
+
+builder.Services.AddSingleton<ProductClientDelegatingHandler>();
+builder.Services.AddSingleton<ProductClient>();
+builder.Services.AddHttpClient<ProductClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ProductApi:BaseUrl"]!);
+}).AddHttpMessageHandler<ProductClientDelegatingHandler>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();

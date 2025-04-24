@@ -1,3 +1,4 @@
+using EhCase.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EhCase.Api.Controllers
@@ -12,15 +13,18 @@ namespace EhCase.Api.Controllers
         };
 
         private readonly ILogger<WeatherForecastController> _logger;
+        private readonly ProductClient _productClient;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, ProductClient productClient)
         {
             _logger = logger;
+            _productClient = productClient;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
+        public async Task<IEnumerable<WeatherForecast>> Get()
         {
+            var test = await _productClient.GetAllProductsAsync();
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
