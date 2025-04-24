@@ -3,13 +3,21 @@ using System.Net.Http.Headers;
 
 namespace EhCase.Api.ProductClientService;
 
-public class ProductClientDelegatingHandler(ProductClient productClient, IConfiguration configuration) : DelegatingHandler
+public class ProductClientDelegatingHandler : DelegatingHandler
 {
-    private string? _token;
+    public ProductClientDelegatingHandler(HttpClient httpClient, IConfiguration configuration)
+    {
+        _productClient = httpClient;
+        _configuration = configuration;
+    }
+
+    private readonly string? _token;
+    private readonly HttpClient _productClient;
+    private readonly IConfiguration _configuration;
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        request.Headers.Authorization = new AuthenticationHeaderValue("bearer", await GetToken(cancellationToken));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await GetToken(cancellationToken));
         return await base.SendAsync(request, cancellationToken);
     }
 
@@ -20,8 +28,9 @@ public class ProductClientDelegatingHandler(ProductClient productClient, IConfig
             return _token;
         }
 
-        var loginRequest = new LoginRequest { Email = configuration["ProductApi:Email"] };
-        var response = await productClient.LoginAsync(loginRequest, cancellationToken);
-        return response.Token;
+        var loginRequest = new LoginRequest { Email = _configuration["ProductApi:Email"] };
+        var response = await _productClient.PostAsJsonAsync("api/login", loginRequest, cancellationToken);
+        var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>(cancellationToken: cancellationToken);
+        return loginResponse!.Token;
     }
 }

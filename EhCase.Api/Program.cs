@@ -24,8 +24,13 @@ builder.Services.AddSingleton<IProductService, ProductService>();
 builder.Services.AddScoped<IBasketService, EfBasketService>();
 
 builder.Services.AddSingleton<ProductClientDelegatingHandler>();
-builder.Services.AddSingleton<ProductClient>();
-builder.Services.AddHttpClient<ProductClient>(client =>
+
+builder.Services.AddHttpClient<ProductClientDelegatingHandler>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ProductApi:BaseUrl"]!);
+});
+
+builder.Services.AddHttpClient<IProductClient, ProductClient>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["ProductApi:BaseUrl"]!);
 }).AddHttpMessageHandler<ProductClientDelegatingHandler>();

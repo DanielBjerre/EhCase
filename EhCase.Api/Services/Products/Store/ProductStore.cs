@@ -2,10 +2,10 @@
 
 public class ProductStore : IProductStore
 {
-    private readonly ProductClient _productClient;
+    private readonly IProductClient _productClient;
     private List<Product> _products = [];
 
-    public ProductStore(ProductClient productClient)
+    public ProductStore(IProductClient productClient)
     {
         _productClient = productClient;
     }
